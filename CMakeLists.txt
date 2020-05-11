@@ -39,6 +39,7 @@ ENDIF ()
 TARGET_COMPILE_OPTIONS(
     ${TARGET_NAME} PRIVATE
     -g
+    -O3
     -Wall
     -Wfatal-errors
     -std=c++17
@@ -65,11 +66,7 @@ TARGET_COMPILE_OPTIONS(
     -Wno-unused-parameter
     -Wno-shadow
 )
-IF (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-    IF (CMAKE_CXX_COMPILER_VERSION VERSION_LESS_EQUAL "8.0.0")
-    ELSE ()
-    ENDIF ()
-ELSEIF (CMAKE_CXX_COMPILER_ID MATCHES "[Cc]lang")
+IF (CMAKE_CXX_COMPILER_ID MATCHES "[Cc]lang")
     TARGET_COMPILE_OPTIONS(
         ${TARGET_NAME} PRIVATE
         -Wno-padded
@@ -78,7 +75,4 @@ ELSEIF (CMAKE_CXX_COMPILER_ID MATCHES "[Cc]lang")
         -Wno-unknown-pragmas
         -Wno-exit-time-destructors
     )
-    IF (CMAKE_CXX_COMPILER_VERSION VERSION_LESS "9.0.0")
-    ELSE ()
-    ENDIF ()
 ENDIF ()
