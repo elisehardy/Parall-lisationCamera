@@ -56,10 +56,11 @@ static double meanIlluminance(const std::list<cv::Mat> &frames, int32_t x, int32
 
 static double standardDeviationIlluminance(const std::list<cv::Mat> &frames, int32_t x, int32_t y) {
     double mean = meanIlluminance(frames, x, y);
-    double sd = 0;
+    double sd = 0, tmp;
     
     for (const cv::Mat &frame : frames) {
-        sd += (frame.at<uint8_t>(y, x) - mean) * (frame.at<uint8_t>(y, x) - mean);
+        tmp = frame.at<uint8_t>(y, x) - mean;
+        sd += tmp * tmp;
     }
     sd = sqrt(sd / MINIMUM_FRAME_COUNT);
     
