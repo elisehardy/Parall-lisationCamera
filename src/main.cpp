@@ -1,6 +1,7 @@
 #include <iostream>
 #include <list>
 
+#include <omp.h>
 #include <opencv2/opencv.hpp>
 #include <opencv2/core.hpp>
 #include <opencv2/videoio.hpp>
@@ -72,6 +73,7 @@ static double standardDeviationIlluminance(const std::list<cv::Mat> &frames, int
 static void computeForeground(const std::list<cv::Mat> &frames, cv::Mat &dst, int32_t cols, int32_t rows) {
     dst = cv::Mat(rows, cols, CV_8UC1);
     
+    #pragma omp parallel for default(none) shared(dst) firstprivate(rows, cols, frames)
     for (int y = 0; y < rows; y++) {
         for (int x = 0; x < cols; x++) {
             if (standardDeviationIlluminance(frames, x, y) < BACKGROUND_THRESHOLD_SQUARED) {

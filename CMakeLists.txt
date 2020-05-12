@@ -7,6 +7,8 @@ OPTION(PROFILING "Profile the time taken by each step" ON)
 
 ############################## 3RD PARTIES LIBS ################################
 
+SET(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -fopenmp)
+
 FIND_PACKAGE(OpenCV REQUIRED)
 
 INCLUDE_DIRECTORIES(
@@ -38,41 +40,23 @@ ENDIF ()
 
 TARGET_COMPILE_OPTIONS(
     ${TARGET_NAME} PRIVATE
-    -g
     -O3
-    -Wall
-    -Wfatal-errors
     -std=c++17
+    -Wno-c++98-compat
+    -Wno-gnu-statement-expression
 )
-
 # Adding as much warning as possible on GNU gcc/g++ and Clang
 IF (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     TARGET_COMPILE_OPTIONS(
         ${TARGET_NAME} PRIVATE
+        -Wall
         -Wextra
+        -Werror
     )
 ELSEIF (CMAKE_CXX_COMPILER_ID MATCHES "[Cc]lang")
     TARGET_COMPILE_OPTIONS(
         ${TARGET_NAME} PRIVATE
         -Weverything
+        -Wfatal-errors
     )
-ENDIF ()
-
-
-# Disable some warnings
-TARGET_COMPILE_OPTIONS(
-    ${TARGET_NAME} PRIVATE
-    -Wno-gnu-statement-expression
-    -Wno-unused-parameter
-    -Wno-shadow
-)
-IF (CMAKE_CXX_COMPILER_ID MATCHES "[Cc]lang")
-    TARGET_COMPILE_OPTIONS(
-        ${TARGET_NAME} PRIVATE
-        -Wno-padded
-        -Wno-c++98-compat
-        -Wno-weak-vtables
-        -Wno-unknown-pragmas
-        -Wno-exit-time-destructors
-    )
-ENDIF ()
+ENDIF()
