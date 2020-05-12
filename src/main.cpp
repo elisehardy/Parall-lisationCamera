@@ -45,10 +45,9 @@ static constexpr double MINIMUM_FRAME_COUNT = 5;
 static double meanIlluminance(const std::list<cv::Mat> &frames, int32_t x, int32_t y) {
     double mean = 0;
     
-    std::for_each(
-            frames.cbegin(), frames.cend(),
-            [&mean, &x, &y](const cv::Mat &frame) { mean += frame.at<uint8_t>(y, x); }
-    );
+    for (const cv::Mat &frame : frames) {
+        mean += frame.at<uint8_t>(y, x);
+    }
     mean /= MINIMUM_FRAME_COUNT;
     
     return mean;
@@ -57,16 +56,12 @@ static double meanIlluminance(const std::list<cv::Mat> &frames, int32_t x, int32
 
 static double standardDeviationIlluminance(const std::list<cv::Mat> &frames, int32_t x, int32_t y) {
     double mean = meanIlluminance(frames, x, y);
-    double stdDev = 0;
-    double sd;
+    double sd = 0;
     
-    std::for_each(
-            frames.cbegin(), frames.cend(),
-            [&mean, &stdDev, &x, &y](const cv::Mat &frame) {
-                stdDev += (frame.at<uint8_t>(y, x) - mean) * (frame.at<uint8_t>(y, x) - mean);
-            }
-    );
-    sd = sqrt(stdDev / MINIMUM_FRAME_COUNT);
+    for (const cv::Mat &frame : frames) {
+        sd += (frame.at<uint8_t>(y, x) - mean) * (frame.at<uint8_t>(y, x) - mean);
+    }
+    sd = sqrt(sd / MINIMUM_FRAME_COUNT);
     
     return sd;
 }
