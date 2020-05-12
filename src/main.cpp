@@ -40,6 +40,7 @@ static uint32_t tab = 0;
 static constexpr double AREA_SIZE_HUMAN = 15000;
 static constexpr double BACKGROUND_THRESHOLD = 5;
 static constexpr double MINIMUM_FRAME_COUNT = 5;
+static constexpr double INV_MINIMUM_FRAME_COUNT = 1./5;
 
 
 static double meanIlluminance(const std::list<cv::Mat> &frames, int32_t x, int32_t y) {
@@ -48,7 +49,7 @@ static double meanIlluminance(const std::list<cv::Mat> &frames, int32_t x, int32
     for (const cv::Mat &frame : frames) {
         mean += frame.at<uint8_t>(y, x);
     }
-    mean /= MINIMUM_FRAME_COUNT;
+    mean *= INV_MINIMUM_FRAME_COUNT;
     
     return mean;
 }
@@ -62,7 +63,7 @@ static double standardDeviationIlluminance(const std::list<cv::Mat> &frames, int
         tmp = frame.at<uint8_t>(y, x) - mean;
         sd += tmp * tmp;
     }
-    sd = sqrt(sd / MINIMUM_FRAME_COUNT);
+    sd = sqrt(sd * INV_MINIMUM_FRAME_COUNT);
     
     return sd;
 }
