@@ -39,6 +39,7 @@ static uint32_t tab = 0;
 
 static constexpr double AREA_SIZE_HUMAN = 15000;
 static constexpr double BACKGROUND_THRESHOLD = 5;
+static constexpr double BACKGROUND_THRESHOLD_SQUARED = BACKGROUND_THRESHOLD * BACKGROUND_THRESHOLD;
 static constexpr double MINIMUM_FRAME_COUNT = 5;
 static constexpr double INV_MINIMUM_FRAME_COUNT = 1./5;
 
@@ -63,9 +64,8 @@ static double standardDeviationIlluminance(const std::list<cv::Mat> &frames, int
         tmp = frame.at<uint8_t>(y, x) - mean;
         sd += tmp * tmp;
     }
-    sd = sqrt(sd * INV_MINIMUM_FRAME_COUNT);
     
-    return sd;
+    return sd * INV_MINIMUM_FRAME_COUNT;
 }
 
 
@@ -74,7 +74,7 @@ static void computeForeground(const std::list<cv::Mat> &frames, cv::Mat &dst, in
     
     for (int y = 0; y < rows; y++) {
         for (int x = 0; x < cols; x++) {
-            if (standardDeviationIlluminance(frames, x, y) < BACKGROUND_THRESHOLD) {
+            if (standardDeviationIlluminance(frames, x, y) < BACKGROUND_THRESHOLD_SQUARED) {
                 dst.at<uint8_t>(y, x) = 0;
             }
             else {
