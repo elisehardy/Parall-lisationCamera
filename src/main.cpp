@@ -70,7 +70,7 @@ static double standardDeviationIlluminance(const std::list<cv::Mat> &frames, int
 
 
 static void computeForeground(const std::list<cv::Mat> &frames, cv::Mat &dst, int32_t cols, int32_t rows) {
-    frames.back().copyTo(dst);
+    dst = cv::Mat(rows, cols, CV_8UC1);
     
     for (int y = 0; y < rows; y++) {
         for (int x = 0; x < cols; x++) {
