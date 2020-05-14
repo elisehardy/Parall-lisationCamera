@@ -8,7 +8,7 @@ Nous avons pour objectif de réaliser, à l’aide d’une caméra, un comptage 
 Ce que nous entendons par contexte simple est :
 
 * Un arrière plan plat, si possible blanc, et éclairé par une lumière homogène et constante. 
-* Une ou deux personne mobile maximum.
+* Une ou deux personnes mobile maximum.
 
 
 ## II. Fonctionnement
@@ -35,15 +35,15 @@ I(x,y) =
 \end{cases}
 $$
 
-Il convient maintenant de filtrer le bruit relatifs à divers facteurs telles que l'éclairage et la qualité de la caméra. Nous utilisons pour cela l'opérateur morphologique de fermeture.
+Il convient maintenant de filtrer le bruit relatif à divers facteurs telles que l'éclairage et la qualité de la caméra. Nous utilisons pour cela l'opérateur morphologique de fermeture.
 
-La nombre de personnes est maintenant obtenue en comptant les composantes connexes d'une taille supérieur à un seuil $T$.
+La nombre de personnes est maintenant obtenue en comptant les composantes connexes d'une taille supérieures à un seuil $T$.
 
 ## III. Performance
 
 Le programme a été implémenté en *C++* avec l'aide la la biblihotèque *OpenCV*.
 
-Pour mesurer le temps d'exécution des différentes étapes, nous avons utilisé la fonction `gettimeofday()`. En effet comme OpenCV est déjà très optimisé, des outils de *profiling* telle que `gprof` envoit des résultat érronés.
+Pour mesurer le temps d'exécution des différentes étapes, nous avons utilisé la fonction `gettimeofday()`. En effet comme OpenCV est déjà très optimisé, des outils de *profiling* telle que `gprof` envoient des résultats érronés.
 
 Voici les temps d'éxécutions des principales parties du programme:
 
@@ -110,7 +110,7 @@ static void computeForeground(const std::list<cv::Mat> &frames, cv::Mat &dst, in
 
 ### 1. Utilisation de boucle `for` standard
 
-La première amélioration consiste à remplacer les boucle `std::for_each` par des boucles `for` standards :
+La première amélioration consiste à remplacer les boucle `std::for_each` par des boucles `for` standards (on évite ainsi d'utiliser un énumérateur et des redondances, le programme transforme une boucle foreach, en boucle for lors de l'exécution) :
 
 ```cpp
 static double meanIlluminance(const std::list<cv::Mat> &frames, int32_t x, int32_t y) {
@@ -159,7 +159,7 @@ static double standardDeviationIlluminance(const std::list<cv::Mat> &frames, int
 
 ### 3. Utilisation de multiplication au lieux de division
 
-Les divisions par des constantes ont été remplacé par des multiplication par l'inverse de celles-ci :
+Les divisions par des constantes ont été remplacé par des multiplications par l'inverse de celles-ci (une multiplication est plus courte en terme de cycle qu'une division) :
 
 ```cpp
 static double meanIlluminance(const std::list<cv::Mat> &frames, int32_t x, int32_t y) {
@@ -190,7 +190,7 @@ static double standardDeviationIlluminance(const std::list<cv::Mat> &frames, int
 
 ### 4. Suppression de la racine carré
 
-La racine carré a été supprimé en comparant maintenant $\sigma(x,y)$ avec $S^2$ :
+La racine carré a été supprimé en comparant maintenant $\sigma(x,y)$ avec $S^2$ (de même que la section précédente, une multiplication est plus rapide que la fonction sqrt) :
 
 ```cpp
 static double standardDeviationIlluminance(const std::list<cv::Mat> &frames, int32_t x, int32_t y) {
@@ -227,6 +227,7 @@ static void computeForeground(const std::list<cv::Mat> &frames, cv::Mat &dst, in
 ### 5. Initialisation d'une matrice vide
 
 Nous créions jusque là une nouvelle matrice pour l'image binaire en clonant la dernière image. Cela été remplacé par l'initialisation d'une nouvelle matrice.
+L'initialisation d'une matrice vide se fait instantanement alors que pour la copie, on est obligé de parcourir tout l'objet copié.
 
 ```cpp
 static void computeForeground(const std::list<cv::Mat> &frames, cv::Mat &dst, int32_t cols, int32_t rows) {
@@ -273,13 +274,26 @@ static void computeForeground(const std::list<cv::Mat> &frames, cv::Mat &dst, in
 L’ensemble des tests ont été effectué sur un processeur *Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz
 6 cores (12 threads)* avec une valeur $N = 5$ (moyenne sur les 5 images précédentes).
 
-Voici ci-dessous le temps de calcul suivant les optimisations manuelles et l’optimisation compilateur choisis, l’acceleration total à chaque étape par rapport à l’algorithme naif, ainsi que l’acceleration entre chaque optimisation :
+Voici ci-dessous le temps de calcul suivant les optimisations manuelles et l’optimisation compilateur choisis, l’accéleration total à chaque étape par rapport à l’algorithme naif, ainsi que l’accéleration entre chaque optimisation :
 
 
 ![](gain.png)
 
+Sur la graphique on voit qu'à chaque étape d'optimisation, le temps d'exécution diminue, les plus grands écarts étant entre le naive et la boucle for (lors de l'exécution d'une boucle foreach, le compilateur la remplace par des boucles for, while, etc) et entre l'utilisation d'une nouvelle matrice et OpenMP (ayant de nombreuses boucles dans le programme, le parallélisme des tâches accélère grandement le temps d'exécution).
+Pour les autres améliorations, le gain est plus petit mais quand même visible. par exemple entre l'utilisation de valeur temporel (~170000) et l'utilisation de multiplication (~150000) en O0.
+Quelques soit les niveaux d'optimisation utilisé (O0 à O3), les courbes ont la même tendance, les courbes O2 et O3 étant moins rapide car le programme optimise déjà à fond.
+
 ![](accel_naive.png)
+
+Dans ce graphique on voit le pourcentage d'accélération gagné pour chaque amélioration en fonction du programme naif, on gagne ainsi 5% pour la 1ère amélioration en O2 et O3, environ 8% pour l'initialisation d'une nouvelle matrice et jusqu'à 40% pour l'utilisation d'OpenMP en O3.
+La courbe en O3 est légèrement en dessous de celle en O2, cela peut s'expliquer par le fait que le programme cherche tellement à optimiser qu'il prend trop de temps.
 
 ![](accel_previous.png)
 
+Comme pour le graphe précédent, on voit aussi que la courbe en O2 est plus haute que celle en O3, le programme prend trop de temps à optimiser.
+Dans ce graphique, on voit le gain gagné entre chaque amélioration, en accord avec le premier graphique la première amélioration et la dernière font gagner énormement de temps alors que les autres stagnent un peu. 
+
+## VI. Conclusion
+Nous avons réalisé un programme permettant à partir d'une vidéo de compter des personnes et nous avons pu accélérer notre programme grâce à divers améliorations comme l'utilisation d'opération moins longues en terme de cycle ou en remplaçant certaines fonctions lentes par d'autre.
+Mais de toutes les améliorations l'utilisation du parallélisme par OpenMP est la meilleure, son gain est le plus grand (40% en O3) car le programme comporte de nombreuse boucles.
 
